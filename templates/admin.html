@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editorial Command Center — The Weekly Dispatch</title>
+    <style>
+        :root {
+            --bg-primary: #0b0e14;
+            --bg-surface: #131822;
+            --bg-elevated: #1a2230;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #00ffcc;
+            --accent-blue: #2196f3;
+            --border: #263042;
+            --danger: #ff5252;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+        }
+        header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand { font-weight: 800; letter-spacing: 1px; }
+        .brand span { color: var(--accent); }
+        .badge {
+            background: rgba(0, 255, 204, 0.12);
+            color: var(--accent);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .btn {
+            background: var(--bg-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.45rem 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-accent { background: var(--accent); color: #0b0e14; border: none; }
+        .btn-accent:hover { opacity: 0.9; color: #0b0e14; }
+        .btn-danger { border-color: var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+
+        .wrap { max-width: 1320px; margin: 1.5rem auto; padding: 0 1.5rem; }
+
+        .flash {
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .flash.success { background: rgba(0, 255, 204, 0.12); border: 1px solid var(--accent); color: var(--accent); }
+        .flash.error { background: rgba(255, 82, 82, 0.12); border: 1px solid var(--danger); color: var(--danger); }
+
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+        .panel h2 {
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Split-Screen Live Editor */
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .form-group { margin-bottom: 0.9rem; }
+        label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 600; }
+        input[type="text"], input[type="password"], input[type="number"], input[type="url"], select, textarea {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 0.75rem;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.92rem;
+        }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+
+        .live-preview-box {
+            background: var(--bg-primary);
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: 620px;
+        }
+        .preview-kicker { color: var(--accent); font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; }
+        .preview-title { font-family: Georgia, serif; font-size: 1.6rem; margin: 0.4rem 0; }
+        .preview-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .preview-tldr {
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--accent-blue);
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            white-space: pre-line;
+            margin-bottom: 1rem;
+        }
+        .preview-body { font-family: Georgia, serif; white-space: pre-line; line-height: 1.65; }
+
+        /* Article Management Table */
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.8px; }
+        .status-pill {
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-published { background: rgba(0, 255, 204, 0.15); color: var(--accent); }
+        .status-draft { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+
+        .admin-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.75rem;
+        }
+
+        @media (max-width: 960px) {
+            .editor-grid, .admin-two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <span class="brand">NEWSROOM <span>COMMAND</span></span>
+        <span class="badge" style="margin-left:0.6rem;">{{ session.get('display_name') }} ({{ session.get('role') }})</span>
+    </div>
+    <div style="display:flex; gap:0.6rem;">
+        {% if session.get('role') == 'admin' %}
+            <a href="/admin/stats" class="btn btn-accent">Audience Analytics 📊</a>
+        {% endif %}
+        <a href="/" class="btn">View Live Site ↗</a>
+        <a href="/logout" class="btn btn-danger">Logout</a>
+    </div>
+</header>
+
+<div class="wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- PERSONAL WRITER STATS STRIP -->
+    <div class="panel">
+        <h2>
+            <span>My Readership & Story Completion ({{ session.get('display_name') }})</span>
+            <span style="font-size:0.82rem; color:var(--text-muted); font-weight:normal;">Live reader scroll telemetry</span>
+        </h2>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+            <div style="background:var(--bg-primary); border:1px solid var(--border); padding:1rem; border-radius:8px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">My Total Views</div>
+                <div style="font-size:1.75rem; font-weight:800; color:var(--accent);">{{ my_views }}</div>
+            </div>
+            <div style="background:var(--bg-primary); border:1px solid var(--border); padding:1rem; border-radius:8px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Avg. Story Read</div>
+                <div style="font-size:1.75rem; font-weight:800;">{{ my_avg_read }}%</div>
+            </div>
+            <div style="background:var(--bg-primary); border:1px solid var(--border); padding:1rem; border-radius:8px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">100% Finish Rate</div>
+                <div style="font-size:1.75rem; font-weight:800; color:var(--accent-blue);">{{ my_completion_rate }}%</div>
+            </div>
+        </div>
+
+        {% if my_articles %}
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>My Story</th>
+                        <th>Status</th>
+                        <th>Views</th>
+                        <th>Avg. Read %</th>
+                        <th>Finished (100%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in my_articles %}
+                    <tr>
+                        <td><strong>{{ m.title }}</strong></td>
+                        <td><span class="status-pill status-{{ m.status }}">{{ m.status }}</span></td>
+                        <td>{{ m.views }}</td>
+                        <td style="min-width:150px;">
+                            <div style="font-size:0.8rem; margin-bottom:3px;">{{ m.avg_read_pct }}% read</div>
+                            <div style="width:100%; height:6px; background:var(--bg-primary); border-radius:4px; overflow:hidden;">
+                                <div style="width:{{ m.avg_read_pct }}%; height:100%; background:var(--accent);"></div>
+                            </div>
+                        </td>
+                        <td>{{ m.pct_100 }}% ({{ m.read_100 }})</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 1. LIVE SPLIT-SCREEN ARTICLE STUDIO -->
+    <div class="panel">
+        <h2>
+            <span>{% if edit_article %}Editing Story #{{ edit_article.id }}{% else %}Write New Story (Auto-attributed to {{ session.get('display_name') }}){% endif %}</span>
+            {% if edit_article %}
+            <a href="/admin" class="btn">Cancel Edit / New Story</a>
+            {% endif %}
+        </h2>
+
+        <div class="editor-grid">
+            <form method="POST" action="/admin/article/save">
+                {% if edit_article %}
+                <input type="hidden" name="article_id" value="{{ edit_article.id }}">
+                {% endif %}
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
+                    <div class="form-group">
+                        <label>Section / Category</label>
+                        <select name="category" id="in-category" oninput="updatePreview()">
+                            {% set current_cat = edit_article.category if edit_article else 'COVER STORY' %}
+                            {% for opt in ['COVER STORY', 'TECHNOLOGY', 'LOCAL & CIVICS', 'ANALYSIS', 'OPINION', 'MAILBAG'] %}
+                            <option value="{{ opt }}" {% if current_cat == opt %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Publication Status</label>
+                        <select name="status">
+                            <option value="draft" {% if edit_article and edit_article.status == 'draft' %}selected{% endif %}>Save as Draft (Hidden)</option>
+                            <option value="published" {% if edit_article and edit_article.status == 'published' %}selected{% endif %}>Publish to Live Issue</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Headline</label>
+                    <input type="text" name="title" id="in-title" oninput="updatePreview()"
+                           value="{{ edit_article.title if edit_article else '' }}" placeholder="Enter article headline..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>TL;DR Key Takeaways</label>
+                    <textarea name="tldr" id="in-tldr" rows="3" oninput="updatePreview()"
+                              placeholder="• Bullet one&#10;• Bullet two">{{ edit_article.tldr if edit_article else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Article Body</label>
+                    <textarea name="body" id="in-body" rows="10" oninput="updatePreview()"
+                              placeholder="Start writing your story..." required>{{ edit_article.body if edit_article else '' }}</textarea>
+                </div>
+
+                <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="checkbox" name="is_lead" id="is_lead" style="width:auto;"
+                           {% if edit_article and edit_article.is_lead %}checked{% endif %}>
+                    <label for="is_lead" style="margin:0;">Feature as Lead Cover Story</label>
+                </div>
+
+                <button type="submit" class="btn btn-accent" style="width:100%; padding:0.75rem;">
+                    {% if edit_article %}Save Changes{% else %}Save Story{% endif %}
+                </button>
+            </form>
+
+            <!-- Live Preview Pane -->
+            <div class="live-preview-box">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem; display:flex; justify-content:space-between;">
+                    <span>LIVE READER PREVIEW</span>
+                    <span id="live-stats">0 words • 1 min read</span>
+                </div>
+                <div class="preview-kicker" id="prev-cat">COVER STORY</div>
+                <div class="preview-title" id="prev-title">Your Headline Appears Here</div>
+                <div class="preview-meta">By <strong>{{ edit_article.author_name if edit_article else session.get('display_name') }}</strong></div>
+                <div class="preview-tldr" id="prev-tldr" style="display:none;"></div>
+                <div class="preview-body" id="prev-body">Start typing in the editor to see your live formatted article...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ARTICLE MANAGEMENT TABLE -->
+    <div class="panel">
+        <h2>Issue #{{ issue.issue_number }} Articles & Drafts</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Headline</th>
+                        <th>Writer</th>
+                        <th>Read Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for art in articles %}
+                    <tr>
+                        <td>
+                            <span class="status-pill status-{{ art.status }}">{{ art.status }}</span>
+                            {% if art.is_lead %}<span class="badge" style="margin-left:4px;">LEAD</span>{% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ art.title }}</strong><br>
+                            <span style="font-size:0.78rem; color:var(--text-muted);">{{ art.category }}</span>
+                        </td>
+                        <td>{{ art.author_name }}</td>
+                        <td>{{ art.read_minutes }} min</td>
+                        <td style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                            <a href="/admin?edit={{ art.id }}" class="btn">Edit</a>
+                            <form method="POST" action="/admin/article/toggle-status/{{ art.id }}" style="display:inline;">
+                                <button type="submit" class="btn">
+                                    {% if art.status == 'draft' %}Publish{% else %}Unpublish{% endif %}
+                                </button>
+                            </form>
+                            <form method="POST" action="/admin/article/delete/{{ art.id }}" style="display:inline;"
+                                  onsubmit="return confirm('Delete this article permanently?');">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. ADMIN ONLY: SPONSOR SLOTS & WRITER MANAGEMENT -->
+    {% if session.get('role') == 'admin' %}
+    <div class="admin-two-col">
+        <!-- Sponsor Slot Manager -->
+        <div class="panel">
+            <h2>Sponsor Slots (Auto-hides if no image)</h2>
+            {% for sp in sponsors %}
+            <form method="POST" action="/admin/sponsors/update" enctype="multipart/form-data"
+                  style="padding-bottom:1rem; margin-bottom:1rem; border-bottom:1px solid var(--border);">
+                <input type="hidden" name="slot_key" value="{{ sp.slot_key }}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <strong style="color:var(--accent); font-size:0.9rem;">{{ sp.slot_label }}</strong>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">
+                        {% if sp.image_filename %}ACTIVE{% else %}HIDDEN (No Image){% endif %}
+                    </span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:0.6rem;">
+                    <input type="text" name="sponsor_name" value="{{ sp.sponsor_name }}" placeholder="Sponsor Name">
+                    <input type="url" name="target_url" value="{{ sp.target_url }}" placeholder="https://sponsor-link.com">
+                </div>
+
+                <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+                    <input type="file" name="sponsor_image" accept="image/*" style="font-size:0.82rem; flex:1;">
+                    {% if sp.image_filename %}
+                    <label style="margin:0; display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; color:var(--danger);">
+                        <input type="checkbox" name="clear_image" value="1" style="width:auto;"> Remove Image
+                    </label>
+                    {% endif %}
+                    <button type="submit" class="btn btn-accent">Save Slot</button>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
+
+        <!-- Add Writers & Edition Settings -->
+        <div>
+            <div class="panel">
+                <h2>Add Newsroom Writer</h2>
+                <form method="POST" action="/admin/users/add">
+                    <div class="form-group">
+                        <label>Writer Display Name (Shown on Articles)</label>
+                        <input type="text" name="display_name" placeholder="e.g., Sarah Jenkins" required>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+                        <div class="form-group">
+                            <label>Login Username</label>
+                            <input type="text" name="username" placeholder="sjenkins" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select name="role">
+                                <option value="writer">Writer (Write & Edit)</option>
+                                <option value="admin">Admin (Full Access)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Password</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width:100%;">Create Staff Account</button>
+                </form>
+
+                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border);">
+                    <label style="margin-bottom:0.6rem;">Manage Newsroom Staff ({{ users|length }})</label>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Screen Name</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in users %}
+                                <tr>
+                                    <td><strong>{{ u.display_name }}</strong></td>
+                                    <td style="color:var(--text-muted);">@{{ u.username }}</td>
+                                    <td><span class="badge">{{ u.role }}</span></td>
+                                    <td style="display:flex; gap:0.4rem;">
+                                        <button type="button" class="btn"
+                                                onclick="openUserModal('{{ u.id }}', '{{ u.display_name|e }}', '{{ u.username|e }}', '{{ u.role }}')">
+                                            Edit
+                                        </button>
+                                        {% if u.id != session.get('user_id') %}
+                                        <form method="POST" action="/admin/users/delete/{{ u.id }}" style="display:inline;"
+                                              onsubmit="return confirm('Delete user @{{ u.username }}? Their existing articles will be reassigned to you.');">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MY ACCOUNT & CREDENTIALS (Available to all logged-in writers & admins) -->
+            <div class="panel">
+                <h2>My Profile & Login Credentials</h2>
+                <form method="POST" action="/admin/account/update" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:0.85rem; align-items:end;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Screen Name (Shown on Articles)</label>
+                        <input type="text" name="display_name" value="{{ session.get('display_name') }}" required>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Login Username</label>
+                        <input type="text" name="username" value="{{ session.get('username') }}" required>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>New Password (Leave blank to keep current)</label>
+                        <input type="password" name="password" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-accent" style="width:100%; padding:0.62rem;">Update My Account</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>Current Edition Settings</h2>
+                <form method="POST" action="/admin/issue/update">
+                    <div style="display:grid; grid-template-columns:100px 1fr; gap:0.8rem;">
+                        <div class="form-group">
+                            <label>Issue #</label>
+                            <input type="number" name="issue_number" value="{{ issue.issue_number }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Publish Date</label>
+                            <input type="text" name="publish_date" value="{{ issue.publish_date }}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Edition Theme Title</label>
+                        <input type="text" name="title" value="{{ issue.title }}" required>
+                    </div>
+                    <button type="submit" class="btn">Update Edition Banner</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function updatePreview() {
+        const cat = document.getElementById('in-category').value;
+        const title = document.getElementById('in-title').value.trim();
+        const tldr = document.getElementById('in-tldr').value.trim();
+        const body = document.getElementById('in-body').value;
+
+        document.getElementById('prev-cat').textContent = cat;
+        document.getElementById('prev-title').textContent = title || 'Your Headline Appears Here';
+
+        const tldrEl = document.getElementById('prev-tldr');
+        if (tldr) {
+            tldrEl.style.display = 'block';
+            tldrEl.textContent = tldr;
+        } else {
+            tldrEl.style.display = 'none';
+        }
+
+        document.getElementById('prev-body').textContent = body || 'Start typing in the editor to see your live formatted article...';
+
+        // Live Word Count & Read Time Calculation (200 WPM)
+        const words = body.trim() ? body.trim().split(/\s+/).length : 0;
+        const mins = Math.max(1, Math.ceil(words / 200));
+        document.getElementById('live-stats').textContent = `${words} words • ${mins} min read`;
+    }
+
+    // Initialize preview on load (for editing existing articles)
+    updatePreview();
+</script>
+<!-- Edit User Credentials Modal -->
+<div id="user-edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:2000; justify-content:center; align-items:center; padding:1rem;">
+    <div class="panel" style="width:100%; max-width:440px; margin:0; border-top:3px solid var(--accent);">
+        <h2 style="margin-bottom:1rem;">
+            <span id="modal-user-heading">Edit Staff Member</span>
+            <button type="button" class="btn" onclick="closeUserModal()">✕</button>
+        </h2>
+        <form id="user-edit-form" method="POST">
+            <div class="form-group">
+                <label>Screen Name (Author Byline)</label>
+                <input type="text" name="display_name" id="edit-user-display" required>
+            </div>
+            <div class="form-group">
+                <label>Login Username</label>
+                <input type="text" name="username" id="edit-user-username" required>
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select name="role" id="edit-user-role">
+                    <option value="writer">Writer (Write & Edit)</option>
+                    <option value="admin">Admin (Full Access)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Reset Password (Leave blank to keep existing password)</label>
+                <input type="password" name="password" id="edit-user-password" placeholder="Enter new password...">
+            </div>
+            <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+                <button type="submit" class="btn btn-accent" style="flex:1; padding:0.65rem;">Save Credentials</button>
+                <button type="button" class="btn" onclick="closeUserModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openUserModal(id, displayName, username, role) {
+        document.getElementById('user-edit-form').action = `/admin/users/edit/${id}`;
+        document.getElementById('modal-user-heading').textContent = `Edit @${username}`;
+        document.getElementById('edit-user-display').value = displayName;
+        document.getElementById('edit-user-username').value = username;
+        document.getElementById('edit-user-role').value = role;
+        document.getElementById('edit-user-password').value = '';
+        document.getElementById('user-edit-modal').style.display = 'flex';
+    }
+
+    function closeUserModal() {
+        document.getElementById('user-edit-modal').style.display = 'none';
+    }
+</script>
+</body>
+</html>

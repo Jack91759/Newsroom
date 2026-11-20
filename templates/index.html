@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News WEEKLY — Issue #{{ issue.issue_number }}</title>
+    <style>
+        :root {
+            --bg-primary: #0b0e14;
+            --bg-surface: #131822;
+            --bg-elevated: #1a2230;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #00ffcc;
+            --accent-blue: #2196f3;
+            --border: #263042;
+            --font-serif: 'Georgia', 'Times New Roman', serif;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --body-size: 1.08rem;
+        }
+
+        body.light-theme {
+            --bg-primary: #f5f7fa;
+            --bg-surface: #ffffff;
+            --bg-elevated: #eef1f5;
+            --text-main: #161b22;
+            --text-muted: #57606a;
+            --accent: #0077ff;
+            --border: #d0d7de;
+        }
+
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.65;
+            transition: background 0.25s, color 0.25s;
+        }
+
+        /* Top Scroll Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 4px;
+            background: var(--bg-elevated);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+        }
+
+        /* Sticky Header */
+        header {
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 4px;
+            z-index: 900;
+        }
+        .nav-bar {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand {
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            font-size: 1.25rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .brand span { color: var(--accent); }
+
+        .controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .btn {
+            background: var(--bg-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.42rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.83rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-accent { background: var(--accent); color: #0b0e14; border: none; }
+        .btn-accent:hover { opacity: 0.9; color: #0b0e14; }
+
+        /* Sponsor Containers (Hidden automatically if no image is set) */
+        .sponsor-wrap {
+            max-width: 1180px;
+            margin: 1.25rem auto;
+            padding: 0 1.5rem;
+            text-align: center;
+        }
+        .sponsor-card {
+            display: inline-block;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem;
+            max-width: 100%;
+            text-decoration: none;
+        }
+        .sponsor-tag {
+            display: block;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+        .sponsor-card img {
+            max-width: 100%;
+            max-height: 140px;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+        .sidebar-sponsor img { max-height: 260px; width: 100%; object-fit: cover; }
+
+        /* Edition Banner & Search Bar */
+        .edition-banner {
+            max-width: 1180px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+        }
+        .banner-inner {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            padding: 1.75rem 2rem;
+        }
+        .edition-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .banner-inner h1 {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        /* Search & Section Filter Bar */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .category-pills { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+        .pill {
+            font-size: 0.78rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            font-weight: 600;
+        }
+        .pill.active, .pill:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .search-form { display: flex; gap: 0.4rem; }
+        .search-form input {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            min-width: 220px;
+        }
+        .search-form input:focus { outline: none; border-color: var(--accent); }
+
+        /* Main Scroll Layout */
+        .container {
+            max-width: 1180px;
+            margin: 0 auto 4rem;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        body.focus-mode .container { grid-template-columns: 1fr; max-width: 800px; }
+        body.focus-mode aside { display: none; }
+
+        /* Sticky Left Column */
+        aside {
+            position: sticky;
+            top: 82px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .side-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .side-box h3 {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 0.9rem;
+        }
+        .toc-list { list-style: none; }
+        .toc-list li {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .toc-list li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .toc-list a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: block;
+        }
+        .toc-list a:hover { color: var(--accent); }
+        .toc-meta { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        /* Article Cards */
+        .article-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            scroll-margin-top: 90px;
+        }
+        .article-card.lead { border-top: 3px solid var(--accent); }
+
+        .kicker {
+            display: inline-block;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            color: var(--accent);
+            background: rgba(0, 255, 204, 0.08);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+        .article-card h2 {
+            font-family: var(--font-serif);
+            font-size: 1.75rem;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+        }
+        .byline {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .tldr-box {
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--accent-blue);
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+        }
+        .tldr-title {
+            font-size: 0.76rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-blue);
+            margin-bottom: 0.35rem;
+        }
+        .tldr-content { white-space: pre-line; font-size: 0.94rem; }
+
+        .article-body {
+            font-family: var(--font-serif);
+            font-size: var(--body-size);
+            white-space: pre-line;
+        }
+
+        .article-footer {
+            margin-top: 1.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Weekly Reader Poll Widget */
+        .poll-option {
+            display: block;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .poll-option:hover { border-color: var(--accent); }
+
+        @media (max-width: 860px) {
+            .container { grid-template-columns: 1fr; }
+            aside { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<header>
+    <div class="nav-bar">
+        <a href="/" class="brand">News <span>WEEKLY</span></a>
+        <div class="controls">
+            <button class="btn" onclick="adjustFont(-0.08)">A-</button>
+            <button class="btn" onclick="adjustFont(0.08)">A+</button>
+            <button class="btn" onclick="toggleFocus()">Focus Mode</button>
+            <button class="btn" onclick="toggleTheme()">Theme</button>
+            {% if session.get('user_id') %}
+                <a href="/admin" class="btn btn-accent">Newsroom Desk ({{ session.get('display_name') }})</a>
+            {% else %}
+                <a href="/login" class="btn">Staff Login</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<!-- TOP SPONSOR SLOT: Automatically hidden if no image uploaded -->
+{% if sponsors.top_banner and sponsors.top_banner.image_filename %}
+<div class="sponsor-wrap">
+    <a class="sponsor-card" href="{{ sponsors.top_banner.target_url or '#' }}" target="_blank" rel="noopener">
+        <span class="sponsor-tag">Sponsored by {{ sponsors.top_banner.sponsor_name or 'Our Partner' }}</span>
+        <img src="{{ url_for('static', filename='uploads/' + sponsors.top_banner.image_filename) }}" alt="Sponsor Banner">
+    </a>
+</div>
+{% endif %}
+
+<section class="edition-banner">
+    <div class="banner-inner">
+        <div class="edition-meta">
+            <span>ISSUE #{{ issue.issue_number }}</span>
+            <span>•</span>
+            <span>{{ issue.publish_date }}</span>
+            <span>•</span>
+            <span>{{ total_minutes }} MIN FULL EDITION READ</span>
+        </div>
+        <h1>{{ issue.title }}</h1>
+
+        <div class="toolbar">
+            <div class="category-pills">
+                <a href="/" class="pill {% if not category_filter %}active{% endif %}">All Sections</a>
+                {% for cat in categories %}
+                <a href="/?category={{ cat }}" class="pill {% if category_filter == cat %}active{% endif %}">{{ cat }}</a>
+                {% endfor %}
+            </div>
+
+            <form class="search-form" method="GET" action="/">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search stories, topics, writers...">
+                <button type="submit" class="btn btn-accent">Search</button>
+                {% if search_query or category_filter %}
+                <a href="/" class="btn">Reset</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- Sticky Sidebar -->
+    <aside>
+        <div class="side-box">
+            <h3>In This Issue ({{ articles|length }})</h3>
+            <ul class="toc-list">
+                {% for article in articles %}
+                <li>
+                    <a href="#article-{{ article.id }}">{{ article.title }}</a>
+                    <div class="toc-meta">{{ article.category }} • {{ article.read_minutes }} min • {{ article.author_name }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- SIDEBAR SPONSOR SLOT: Hidden when no image uploaded -->
+        {% if sponsors.sidebar_box and sponsors.sidebar_box.image_filename %}
+        <div class="side-box sidebar-sponsor" style="text-align:center;">
+            <span class="sponsor-tag">Community Sponsor • {{ sponsors.sidebar_box.sponsor_name }}</span>
+            <a href="{{ sponsors.sidebar_box.target_url or '#' }}" target="_blank" rel="noopener">
+                <img src="{{ url_for('static', filename='uploads/' + sponsors.sidebar_box.image_filename) }}" alt="Sidebar Sponsor">
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Interactive Reader Pulse Poll -->
+        <div class="side-box">
+            <h3>Weekly Reader Pulse</h3>
+            <p style="font-size:0.86rem; margin-bottom:0.75rem;">What should our investigative team cover next week?</p>
+            <div id="poll-area">
+                <button class="poll-option" onclick="votePoll('Local Tech & Infrastructure')">Local Tech & Infrastructure</button>
+                <button class="poll-option" onclick="votePoll('County Budget & Schools')">County Budget & Schools</button>
+                <button class="poll-option" onclick="votePoll('Small Business Spotlight')">Small Business Spotlight</button>
+            </div>
+        </div>
+
+        <!-- Weekly Email Edition Signup -->
+        <div class="side-box" id="subscribe-box" style="border-top: 3px solid var(--accent);">
+            <h3>Get The Weekly Edition</h3>
+            <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:0.8rem;">
+                One curated issue delivered every Sunday morning. Zero spam, unsubscribe anytime.
+            </p>
+            <form method="POST" action="/subscribe">
+                <input type="email" name="email" placeholder="you@example.com" required
+                       style="width:100%; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-main); padding:0.55rem 0.7rem; border-radius:6px; margin-bottom:0.55rem; font-size:0.88rem;">
+                <button type="submit" class="btn btn-accent" style="width:100%; padding:0.55rem;">
+                    Join Mailing List
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Scrollable Main Feed -->
+    <main>
+        {% if not articles %}
+        <div class="article-card">
+            <h2>No matching stories found</h2>
+            <p class="byline">Try clearing your search filter or browsing all sections of Issue #{{ issue.issue_number }}.</p>
+            <a href="/" class="btn btn-accent">View Full Issue</a>
+        </div>
+        {% endif %}
+
+        {% for article in articles %}
+        <article id="article-{{ article.id }}" data-article-id="{{ article.id }}" class="article-card {% if article.is_lead %}lead{% endif %}">
+            <span class="kicker">{{ article.category }}</span>
+            <h2>{{ article.title }}</h2>
+            <div class="byline">By <strong>{{ article.author_name }}</strong> • {{ article.read_minutes }} min read</div>
+
+            {% if article.tldr %}
+            <div class="tldr-box">
+                <div class="tldr-title">Executive Summary — TL;DR</div>
+                <div class="tldr-content">{{ article.tldr }}</div>
+            </div>
+            {% endif %}
+
+            <div class="article-body">{{ article.body }}</div>
+
+            <div class="article-footer">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Updated {{ article.updated_at }}</span>
+                {% if not loop.last %}
+                <a href="#article-{{ articles[loop.index].id }}" class="btn">Next Story ↓</a>
+                {% else %}
+                <a href="#" class="btn">Back to Top ↑</a>
+                {% endif %}
+            </div>
+        </article>
+
+        <!-- MID-FEED SPONSOR SLOT after the lead story (Hidden if no image uploaded) -->
+        {% if loop.first and sponsors.mid_feed and sponsors.mid_feed.image_filename %}
+        <div class="sponsor-wrap" style="padding:0; margin-bottom:2rem;">
+            <a class="sponsor-card" style="width:100%;" href="{{ sponsors.mid_feed.target_url or '#' }}" target="_blank" rel="noopener">
+                <span class="sponsor-tag">Featured Partner — {{ sponsors.mid_feed.sponsor_name or 'Sponsor' }}</span>
+                <img src="{{ url_for('static', filename='uploads/' + sponsors.mid_feed.image_filename) }}" alt="Featured Sponsor">
+            </a>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </main>
+</div>
+
+<script>
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        document.getElementById('progress-bar').style.width = progress + '%';
+    });
+
+    let currentSize = 1.08;
+    function adjustFont(delta) {
+        currentSize = Math.min(1.4, Math.max(0.88, currentSize + delta));
+        document.documentElement.style.setProperty('--body-size', currentSize + 'rem');
+    }
+
+    function toggleFocus() { document.body.classList.toggle('focus-mode'); }
+    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+
+    function votePoll(choice) {
+        document.getElementById('poll-area').innerHTML =
+            `<div style="padding:0.75rem; background:var(--bg-elevated); border-left:3px solid var(--accent); border-radius:6px; font-size:0.85rem;">
+                Thanks for voting for <strong>${choice}</strong>! Results appear in next week's mailbag.
+            </div>`;
+    }
+    // Real-Time Article View & Read-Depth Tracking (25% / 50% / 75% / 100%)
+    function initReadTracking() {
+        const sentEvents = new Set();
+
+        function sendPing(articleId, milestone) {
+            const key = `${articleId}:${milestone}`;
+            if (sentEvents.has(key)) return;
+            sentEvents.add(key);
+
+            fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ article_id: articleId, milestone: milestone }),
+                keepalive: true
+            }).catch(() => {});
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                const articleId = el.dataset.trackArticle;
+                const milestone = el.dataset.trackMilestone;
+                sendPing(articleId, milestone);
+                observer.unobserve(el);
+            });
+        }, { threshold: 0.25 });
+
+        document.querySelectorAll('.article-card[data-article-id]').forEach(card => {
+            const articleId = card.dataset.articleId;
+            const bodyEl = card.querySelector('.article-body');
+            if (!bodyEl) return;
+
+            // Track initial view when the article card enters the screen
+            card.dataset.trackArticle = articleId;
+            card.dataset.trackMilestone = 'view';
+            observer.observe(card);
+
+            // Place 25%, 50%, 75%, and 100% checkpoints inside the article body
+            bodyEl.style.position = 'relative';
+            [25, 50, 75, 100].forEach(pct => {
+                const marker = document.createElement('span');
+                marker.style.position = 'absolute';
+                marker.style.top = pct === 100 ? '98%' : `${pct}%`;
+                marker.style.left = '0';
+                marker.style.width = '1px';
+                marker.style.height = '1px';
+                marker.style.pointerEvents = 'none';
+                marker.dataset.trackArticle = articleId;
+                marker.dataset.trackMilestone = String(pct);
+                bodyEl.appendChild(marker);
+                observer.observe(marker);
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
